@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>X 数据回流面板</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="hero-copy">
+        <div class="eyebrow">局域网只读 · X 数据回流</div>
+        <h1>X 数据面板</h1>
+        <p id="subtitle" class="subtitle">正在读取本地数据...</p>
+      </div>
+      <div class="hero-actions">
+        <div class="lan-chip">局域网只读</div>
+        <div id="freshness" class="badge badge-muted">加载中</div>
+      </div>
+    </header>
+
+    <nav class="topnav">
+      <a href="/" class="topnav-item active">数据</a>
+      <a href="/static/insights.html" class="topnav-item">作战简报</a>
+    </nav>
+
+    <nav class="subnav">
+      <a href="#overview" class="subnav-item active">总览</a>
+      <a href="#table" class="subnav-item">推文列表</a>
+    </nav>
+
+    <main class="shell">
+      <section id="overview" class="overview-grid" aria-label="账号总览"></section>
+
+      <section class="split">
+        <article class="panel health-panel">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">采集健康度</p>
+              <h2>采集器状态</h2>
+            </div>
+            <span id="collector-state" class="badge badge-muted">未知</span>
+          </div>
+          <div id="health" class="health-body"></div>
+        </article>
+
+        <article class="panel leaderboard-panel">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">快速定位</p>
+              <h2>表现榜</h2>
+            </div>
+          </div>
+          <div id="top-performers" class="top-grid"></div>
+        </article>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="section-head table-head">
+          <div>
+            <p class="section-kicker">逐条监控</p>
+            <h2>最近推文</h2>
+          </div>
+          <div class="controls">
+            <label>
+              <span>排序</span>
+              <select id="sort">
+                <option value="created_at">发布时间</option>
+                <option value="views">浏览量</option>
+                <option value="score">综合分</option>
+                <option value="delta_views">浏览增量</option>
+                <option value="velocity">流速</option>
+                <option value="viral_score">爆款指数</option>
+                <option value="velocity_avg">累计均速</option>
+                <option value="replies">回复数</option>
+              </select>
+            </label>
+            <label>
+              <span>顺序</span>
+              <select id="order">
+                <option value="desc">降序</option>
+                <option value="asc">升序</option>
+              </select>
+            </label>
+            <label>
+              <span>条数</span>
+              <select id="limit">
+                <option value="100">100</option>
+                <option value="250">250</option>
+                <option value="500">500</option>
+              </select>
+            </label>
+            <label>
+              <span>状态</span>
+              <select id="status-filter">
+                <option value="all">全部</option>
+                <option value="rising">增长中</option>
+                <option value="stable">稳定</option>
+                <option value="needs_reply">有回复</option>
+                <option value="high_bookmark">收藏高</option>
+                <option value="cold">偏冷</option>
+              </select>
+            </label>
+            <label class="search-label">
+              <span>搜索</span>
+              <input id="search" type="search" autocomplete="off" placeholder="搜索推文正文或 ID">
+            </label>
+            <button id="refresh" type="button">刷新</button>
+          </div>
+        </div>
+
+        <div id="error" class="error is-hidden"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>趋势</th>
+                <th>推文</th>
+                <th>发布时间</th>
+                <th>浏览</th>
+                <th>赞</th>
+                <th>回复</th>
+                <th>收藏</th>
+                <th>转发</th>
+                <th>增量</th>
+                <th>流速</th>
+                <th>爆款</th>
+                <th>互动率</th>
+                <th>综合分</th>
+                <th>状态</th>
+                <th>链接</th>
+              </tr>
+            </thead>
+            <tbody id="tweets-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

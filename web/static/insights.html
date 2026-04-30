@@ -1,0 +1,1133 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>X 数据作战简报</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+      /* ===== 顶部导航 ===== */
+      .topnav {
+        display: flex;
+        gap: 2px;
+        padding: 0 24px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(0,0,0,0.2);
+      }
+      .topnav-item {
+        display: inline-flex;
+        align-items: center;
+        height: var(--tab-h);
+        padding: 0 16px;
+        font-size: 13px;
+        color: var(--muted);
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        transition: color 0.15s, border-color 0.15s;
+        font-variant-numeric: tabular-nums;
+      }
+      .topnav-item:hover { color: var(--soft); }
+      .topnav-item.active {
+        color: var(--accent-strong);
+        border-bottom-color: var(--tab-active-border);
+        background: var(--tab-active-bg);
+      }
+
+      /* ===== 页面骨架 ===== */
+      .insights-shell {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 24px 24px 64px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+
+      /* ===== 区块通用 ===== */
+      .section-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0;
+      }
+      .section-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+      }
+      .section-summary {
+        font-size: 12px;
+        color: var(--amber);
+        margin: 0;
+        font-variant-numeric: tabular-nums;
+      }
+      .section-head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .section-head-right {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* ===== § A: KPI 大字 + sparkline ===== */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      @media (max-width: 800px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 480px) { .kpi-grid { grid-template-columns: 1fr; } }
+
+      .kpi-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: relative;
+        overflow: hidden;
+      }
+      .kpi-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 60px 40px at 90% 10%, rgba(113,112,255,0.07), transparent);
+        pointer-events: none;
+      }
+      .kpi-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .kpi-value {
+        font-size: 30px;
+        font-weight: 800;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      .kpi-value.up   { color: var(--green); }
+      .kpi-value.down { color: var(--red); }
+      .kpi-value.accent { color: var(--accent-strong); }
+      .kpi-sub {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .kpi-delta-up   { color: var(--green); font-weight: 600; }
+      .kpi-delta-down { color: var(--red);   font-weight: 600; }
+      .kpi-delta-flat { color: var(--muted); }
+      .kpi-spark {
+        display: block;
+        margin-top: 4px;
+      }
+
+      /* ===== § B: 类目战况水平柱图 ===== */
+      .bar-chart-wrap {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 20px;
+      }
+      .bar-chart-svg {
+        display: block;
+        width: 100%;
+        overflow: visible;
+      }
+      .bar-chart-row-label {
+        font-size: 12px;
+        fill: var(--soft);
+        font-family: inherit;
+      }
+      .bar-chart-row-value {
+        font-size: 11px;
+        fill: var(--muted);
+        font-family: inherit;
+        font-variant-numeric: tabular-nums;
+      }
+      .bar-chart-row-delta {
+        font-size: 11px;
+        font-family: inherit;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .barchart-arrow {
+        font-size: 10px;
+        font-family: inherit;
+      }
+
+      /* ===== § C: 双 donut ===== */
+      .donut-wrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      @media (max-width: 640px) { .donut-wrap { grid-template-columns: 1fr; } }
+      .donut-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+      .donut-panel-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--muted);
+        align-self: flex-start;
+      }
+      .donut-svg-wrap {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        flex-shrink: 0;
+      }
+      .donut-center-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .donut-center-n {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+      .donut-center-sub {
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .donut-legend {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .donut-legend-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+      }
+      .donut-legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .donut-legend-topic {
+        color: var(--soft);
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .donut-legend-count {
+        color: var(--muted);
+      }
+
+      /* ===== § D: 散点图 ===== */
+      .scatter-wrap {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 20px;
+      }
+      .scatter-svg {
+        display: block;
+        width: 100%;
+        overflow: visible;
+      }
+      .scatter-axis-label {
+        font-size: 10px;
+        fill: var(--muted);
+        font-family: inherit;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .scatter-tick {
+        font-size: 10px;
+        fill: var(--muted);
+        font-family: inherit;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ===== § E: 行动卡片 grid ===== */
+      .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      @media (max-width: 900px) { .actions-grid { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 560px) { .actions-grid { grid-template-columns: 1fr; } }
+
+      .action-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .action-card.boost { background: rgba(39,166,68,0.05); border-color: rgba(39,166,68,0.2); }
+      .action-card.kill  { background: rgba(238,108,104,0.05); border-color: rgba(238,108,104,0.18); }
+      .action-card.reply { background: rgba(113,112,255,0.05); border-color: rgba(113,112,255,0.2); }
+
+      .action-card-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 14px 10px;
+        border-bottom: 1px solid var(--line);
+      }
+      .action-card.boost .action-card-header { border-color: rgba(39,166,68,0.15); }
+      .action-card.kill  .action-card-header { border-color: rgba(238,108,104,0.13); }
+      .action-card.reply .action-card-header { border-color: rgba(113,112,255,0.15); }
+
+      .action-card-title {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .action-card.boost .action-card-title { color: var(--green); }
+      .action-card.kill  .action-card-title { color: var(--red); }
+      .action-card.reply .action-card-title { color: var(--accent-strong); }
+
+      .action-card-count {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .action-card-body {
+        padding: 10px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+      }
+      .action-item-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .action-item-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+      .action-item-text {
+        font-size: 12px;
+        color: var(--soft);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.45;
+      }
+      .action-item-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .action-metric-pill {
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .action-card.boost .action-metric-pill { background: rgba(39,166,68,0.15); color: var(--green); }
+      .action-card.kill  .action-metric-pill { background: rgba(238,108,104,0.12); color: var(--red); }
+      .action-card.reply .action-metric-pill { background: rgba(113,112,255,0.12); color: var(--accent-strong); }
+
+      .action-item-link {
+        font-size: 10px;
+        color: var(--muted);
+        text-decoration: none;
+        margin-left: auto;
+      }
+      .action-item-link:hover { color: var(--accent-strong); }
+
+      .action-card-empty {
+        padding: 18px 14px;
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      /* ===== 状态 ===== */
+      .loading-state {
+        padding: 48px 0;
+        font-size: 13px;
+        color: var(--muted);
+        text-align: center;
+      }
+      .error-banner {
+        padding: 12px 16px;
+        background: rgba(238,108,104,0.08);
+        border: 1px solid rgba(238,108,104,0.2);
+        border-radius: 6px;
+        color: var(--red);
+        font-size: 13px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="hero-copy">
+        <div class="eyebrow">局域网只读 · X 数据回流</div>
+        <h1>X 数据面板</h1>
+        <p class="subtitle">作战简报 · 上周汇总分析</p>
+      </div>
+      <div class="hero-actions">
+        <div class="lan-chip">局域网只读</div>
+      </div>
+    </header>
+
+    <nav class="topnav">
+      <a href="/" class="topnav-item" id="tab-data">数据</a>
+      <a href="/static/insights.html" class="topnav-item active" id="tab-insights">作战简报</a>
+    </nav>
+
+    <main class="insights-shell">
+      <div id="error-banner" class="error-banner"></div>
+      <div id="loading" class="loading-state">正在加载简报数据...</div>
+      <div id="content" style="display:none; flex-direction:column; gap:28px;">
+
+        <!-- A: 本周 KPI -->
+        <section>
+          <div class="section-head">
+            <span class="section-label">A</span>
+            <h2 class="section-title">本周战报</h2>
+            <span id="kpi-summary" class="section-summary"></span>
+          </div>
+          <div id="kpi-grid" class="kpi-grid"></div>
+        </section>
+
+        <!-- B: 类目战况 -->
+        <section>
+          <div class="section-head">
+            <span class="section-label">B</span>
+            <h2 class="section-title">类目战况</h2>
+            <span id="bar-summary" class="section-summary"></span>
+          </div>
+          <div class="bar-chart-wrap">
+            <div id="bar-chart-container"></div>
+          </div>
+        </section>
+
+        <!-- C: 爆款类目分布 -->
+        <section>
+          <div class="section-head">
+            <span class="section-label">C</span>
+            <h2 class="section-title">爆款类目分布</h2>
+            <span id="donut-summary" class="section-summary"></span>
+          </div>
+          <div class="donut-wrap">
+            <div class="donut-panel">
+              <p class="donut-panel-label">高分帖分布</p>
+              <div class="donut-svg-wrap" id="donut-top-wrap"></div>
+              <div class="donut-legend" id="donut-top-legend"></div>
+            </div>
+            <div class="donut-panel">
+              <p class="donut-panel-label">低分帖分布</p>
+              <div class="donut-svg-wrap" id="donut-bot-wrap"></div>
+              <div class="donut-legend" id="donut-bot-legend"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- D: 互动率散点图 -->
+        <section>
+          <div class="section-head">
+            <span class="section-label">D</span>
+            <h2 class="section-title">互动率分布</h2>
+            <span class="section-head-right" id="scatter-meta"></span>
+          </div>
+          <div class="scatter-wrap">
+            <div id="scatter-container"></div>
+          </div>
+        </section>
+
+        <!-- E: 行动列表 -->
+        <section>
+          <div class="section-head">
+            <span class="section-label">E</span>
+            <h2 class="section-title">行动列表</h2>
+          </div>
+          <div class="actions-grid">
+            <article class="action-card boost">
+              <header class="action-card-header">
+                <span class="action-card-title">追投候选</span>
+                <span class="action-card-count" id="boost-count"></span>
+              </header>
+              <div class="action-card-body" id="boost-body"></div>
+            </article>
+            <article class="action-card kill">
+              <header class="action-card-header">
+                <span class="action-card-title">撤停候选</span>
+                <span class="action-card-count" id="kill-count"></span>
+              </header>
+              <div class="action-card-body" id="kill-body"></div>
+            </article>
+            <article class="action-card reply">
+              <header class="action-card-header">
+                <span class="action-card-title">回复候选</span>
+                <span class="action-card-count" id="reply-count"></span>
+              </header>
+              <div class="action-card-body" id="reply-body"></div>
+            </article>
+          </div>
+        </section>
+
+      </div><!-- #content -->
+    </main>
+
+    <script>
+    (function () {
+      'use strict';
+
+      // ── helpers ──────────────────────────────────────────────────────
+      function fmt(n) {
+        if (n == null) return '—';
+        if (typeof n === 'string') return n;
+        if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+        if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+        return String(n);
+      }
+      function fmtPct(v, decimals) {
+        if (v == null) return '—';
+        if (typeof v === 'string') return v;
+        return (v * 100).toFixed(decimals != null ? decimals : 1) + '%';
+      }
+      function fmtFloat(v) {
+        if (v == null) return '—';
+        return (typeof v === 'number') ? v.toFixed(4) : String(v);
+      }
+      function esc(s) {
+        if (!s) return '';
+        return String(s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+      function tweetUrl(id, url) {
+        if (url) return url;
+        return 'https://x.com/i/status/' + id;
+      }
+      // Parse vs_baseline_pct — might be string "+38%" or float 0.38
+      function parseVsPct(v) {
+        if (v == null) return null;
+        if (typeof v === 'number') return v;
+        const s = String(v).replace('%', '').replace('+', '');
+        const n = parseFloat(s);
+        if (isNaN(n)) return null;
+        // if already fractional (< 5 absolute) treat as ratio, else as percent
+        return Math.abs(n) > 5 ? n / 100 : n;
+      }
+      function vsColor(ratio) {
+        if (ratio == null) return 'var(--muted)';
+        if (ratio > 0.1)  return 'var(--green)';
+        if (ratio < -0.1) return 'var(--red)';
+        return 'var(--delta-flat)';
+      }
+
+      // ── SVG chart helpers ────────────────────────────────────────────
+      const NS = 'http://www.w3.org/2000/svg';
+      function svgEl(tag, attrs) {
+        const el = document.createElementNS(NS, tag);
+        for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+        return el;
+      }
+
+      // ── kpiSparkline: returns SVG string for a mini trend line ───────
+      function kpiSparkline(values, w, h) {
+        if (!values || values.length < 2) return '';
+        const pts = values.filter(v => v != null && !isNaN(v));
+        if (pts.length < 2) return '';
+        const mn = Math.min(...pts), mx = Math.max(...pts);
+        const range = mx - mn || 1;
+        const pad = 2;
+        const uw = (w - pad * 2) / (pts.length - 1);
+        const coords = pts.map((v, i) => {
+          const x = pad + i * uw;
+          const y = h - pad - ((v - mn) / range) * (h - pad * 2);
+          return [x, y];
+        });
+        const poly = coords.map(([x, y]) => x + ',' + y).join(' ');
+        const areaClose = ` ${coords[coords.length-1][0]},${h} ${coords[0][0]},${h}`;
+        return `<svg xmlns="${NS}" width="${w}" height="${h}" class="kpi-spark" aria-hidden="true">
+          <defs>
+            <linearGradient id="sg-${w}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <polygon points="${poly} ${areaClose}" fill="url(#sg-${w})"/>
+          <polyline points="${poly}" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="${coords[coords.length-1][0]}" cy="${coords[coords.length-1][1]}" r="2.5" fill="var(--accent-strong)"/>
+        </svg>`;
+      }
+
+      // ── barChart: horizontal bar chart ───────────────────────────────
+      // data = [{label, value, color, delta_str, arrow, posts}]
+      function barChart(data, containerEl) {
+        if (!data || !data.length) {
+          containerEl.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:8px 0">暂无类目数据</p>';
+          return;
+        }
+        const rowH = 34, labelW = 100, valW = 80, deltaW = 72;
+        const barAreaW = 500; // nominal, will scale via SVG viewBox
+        const maxVal = Math.max(...data.map(d => d.value || 0)) || 1;
+        const totalH = data.length * rowH + 8;
+        const totalW = labelW + barAreaW + valW + deltaW;
+
+        const svg = svgEl('svg', {
+          viewBox: `0 0 ${totalW} ${totalH}`,
+          class: 'bar-chart-svg',
+          role: 'img',
+          'aria-label': '类目水平柱图'
+        });
+
+        data.forEach((d, i) => {
+          const y = i * rowH + 4;
+          const barW = Math.max(2, (d.value / maxVal) * barAreaW * 0.85);
+          const midY = y + rowH / 2;
+
+          // label
+          const lbl = svgEl('text', {
+            x: labelW - 8, y: midY + 4,
+            'text-anchor': 'end',
+            class: 'bar-chart-row-label'
+          });
+          lbl.textContent = d.label;
+          svg.appendChild(lbl);
+
+          // bar bg track
+          const track = svgEl('rect', {
+            x: labelW, y: midY - 7,
+            width: barAreaW * 0.85, height: 14,
+            rx: 3, fill: 'rgba(255,255,255,0.04)'
+          });
+          svg.appendChild(track);
+
+          // bar fill
+          const bar = svgEl('rect', {
+            x: labelW, y: midY - 7,
+            width: barW, height: 14,
+            rx: 3, fill: d.color
+          });
+          svg.appendChild(bar);
+
+          // value
+          const valX = labelW + barAreaW * 0.85 + 10;
+          const valTxt = svgEl('text', {
+            x: valX, y: midY + 4,
+            'text-anchor': 'start',
+            class: 'bar-chart-row-value'
+          });
+          valTxt.textContent = d.posts + ' 帖';
+          svg.appendChild(valTxt);
+
+          // delta
+          const dX = valX + valW;
+          if (d.delta_str) {
+            const dTxt = svgEl('text', {
+              x: dX, y: midY + 4,
+              'text-anchor': 'start',
+              class: 'bar-chart-row-delta',
+              fill: d.color
+            });
+            dTxt.textContent = (d.arrow || '') + ' ' + d.delta_str;
+            svg.appendChild(dTxt);
+          }
+        });
+
+        containerEl.innerHTML = '';
+        containerEl.appendChild(svg);
+      }
+
+      // ── donut: SVG donut chart ────────────────────────────────────────
+      // data = [{label, value, color}]
+      // Returns {svg, total}
+      function donut(data, radius) {
+        if (!data || !data.length) return null;
+        const total = data.reduce((s, d) => s + (d.value || 0), 0) || 1;
+        const cx = radius, cy = radius;
+        const outerR = radius - 4;
+        const innerR = outerR * 0.62;
+        const tau = Math.PI * 2;
+        const gap = 0.015; // radians between slices
+
+        const svg = svgEl('svg', {
+          width: radius * 2, height: radius * 2,
+          viewBox: `0 0 ${radius * 2} ${radius * 2}`,
+          role: 'img', 'aria-label': '甜甜圈图'
+        });
+
+        let startAngle = -Math.PI / 2;
+
+        data.forEach(d => {
+          const sliceAngle = (d.value / total) * tau - gap;
+          if (sliceAngle <= 0) return;
+          const endAngle = startAngle + sliceAngle;
+          const x1 = cx + outerR * Math.cos(startAngle);
+          const y1 = cy + outerR * Math.sin(startAngle);
+          const x2 = cx + outerR * Math.cos(endAngle);
+          const y2 = cy + outerR * Math.sin(endAngle);
+          const x3 = cx + innerR * Math.cos(endAngle);
+          const y3 = cy + innerR * Math.sin(endAngle);
+          const x4 = cx + innerR * Math.cos(startAngle);
+          const y4 = cy + innerR * Math.sin(startAngle);
+          const large = sliceAngle > Math.PI ? 1 : 0;
+          const path = svgEl('path', {
+            d: `M ${x1} ${y1} A ${outerR} ${outerR} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 ${large} 0 ${x4} ${y4} Z`,
+            fill: d.color,
+            opacity: '0.9'
+          });
+          svg.appendChild(path);
+          startAngle += sliceAngle + gap;
+        });
+
+        return { svg, total };
+      }
+
+      // ── scatter: SVG scatter plot ─────────────────────────────────────
+      // points = [{x (views log), y (ER 0-1), size (replies), color, label}]
+      function scatter(points, containerEl) {
+        if (!points || !points.length) {
+          containerEl.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:8px 0">暂无推文数据</p>';
+          return;
+        }
+        const W = 900, H = 260;
+        const marginL = 52, marginR = 20, marginT = 12, marginB = 36;
+        const innerW = W - marginL - marginR;
+        const innerH = H - marginT - marginB;
+
+        // log scale for x (views)
+        const xVals = points.map(p => p.x).filter(v => v > 0);
+        const xMin = Math.log10(Math.max(1, Math.min(...xVals)));
+        const xMax = Math.log10(Math.max(1, Math.max(...xVals)));
+        const xRange = xMax - xMin || 1;
+
+        const yVals = points.map(p => p.y).filter(v => v != null);
+        const yMax = Math.min(1, Math.max(...yVals) * 1.15) || 0.1;
+
+        function toX(v) { return marginL + ((Math.log10(Math.max(1, v)) - xMin) / xRange) * innerW; }
+        function toY(v) { return marginT + innerH - (Math.min(v, yMax) / yMax) * innerH; }
+
+        const svg = svgEl('svg', {
+          viewBox: `0 0 ${W} ${H}`,
+          class: 'scatter-svg',
+          role: 'img', 'aria-label': '互动率散点图'
+        });
+
+        // grid lines
+        [0.25, 0.5, 0.75, 1].forEach(t => {
+          const y = marginT + innerH - t * innerH;
+          const line = svgEl('line', {
+            x1: marginL, y1: y, x2: W - marginR, y2: y,
+            stroke: 'rgba(255,255,255,0.05)', 'stroke-width': '1'
+          });
+          svg.appendChild(line);
+          const lbl = svgEl('text', { x: marginL - 6, y: y + 3.5, 'text-anchor': 'end', class: 'scatter-tick' });
+          lbl.textContent = Math.round(t * yMax * 100) + '%';
+          svg.appendChild(lbl);
+        });
+
+        // x axis ticks (log scale)
+        const xTicks = [100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000];
+        xTicks.forEach(v => {
+          if (Math.log10(v) < xMin - 0.3 || Math.log10(v) > xMax + 0.3) return;
+          const x = toX(v);
+          const line = svgEl('line', {
+            x1: x, y1: marginT, x2: x, y2: marginT + innerH,
+            stroke: 'rgba(255,255,255,0.04)', 'stroke-width': '1'
+          });
+          svg.appendChild(line);
+          const lbl = svgEl('text', { x, y: marginT + innerH + 14, 'text-anchor': 'middle', class: 'scatter-tick' });
+          lbl.textContent = fmt(v);
+          svg.appendChild(lbl);
+        });
+
+        // axis labels
+        const yAxisLbl = svgEl('text', {
+          x: 10, y: marginT + innerH / 2,
+          class: 'scatter-axis-label',
+          transform: `rotate(-90, 10, ${marginT + innerH / 2})`
+        });
+        yAxisLbl.textContent = '互动率';
+        svg.appendChild(yAxisLbl);
+
+        const xAxisLbl = svgEl('text', {
+          x: marginL + innerW / 2, y: H - 2,
+          'text-anchor': 'middle',
+          class: 'scatter-axis-label'
+        });
+        xAxisLbl.textContent = '浏览量 (log)';
+        svg.appendChild(xAxisLbl);
+
+        // dots
+        points.forEach(p => {
+          if (!p.x || p.y == null) return;
+          const cx = toX(p.x);
+          const cy = toY(p.y);
+          const r = Math.min(9, Math.max(3, 3 + Math.sqrt(p.size || 0) * 0.8));
+          const circle = svgEl('circle', {
+            cx, cy, r,
+            fill: p.color,
+            opacity: '0.72',
+            'stroke-width': '0'
+          });
+          // tooltip via title
+          const titleEl = svgEl('title');
+          titleEl.textContent = (p.label ? p.label + ' · ' : '') +
+            '浏览 ' + fmt(p.x) + ' · ER ' + fmtPct(p.y, 1) +
+            (p.size ? ' · 回复 ' + p.size : '');
+          circle.appendChild(titleEl);
+          svg.appendChild(circle);
+        });
+
+        containerEl.innerHTML = '';
+        containerEl.appendChild(svg);
+      }
+
+      // ── palette: 9-hue golden-angle HSL ──────────────────────────────
+      function palette(n) {
+        const colors = [];
+        for (let i = 0; i < n; i++) {
+          const h = (i * 137.508) % 360;
+          colors.push(`hsl(${Math.round(h)}, 55%, 58%)`);
+        }
+        return colors;
+      }
+
+      // ── Section A: KPI cards ─────────────────────────────────────────
+      function renderKPI(ws) {
+        const grid = document.getElementById('kpi-grid');
+        const vsPct = parseVsPct(ws.vs_prev_week);
+        const vsStr = vsPct != null
+          ? (vsPct >= 0 ? '+' : '') + Math.round(vsPct * 100) + '%'
+          : ws.vs_prev_week || '—';
+        const vsClass = vsPct == null ? '' : (vsPct > 0 ? ' up' : vsPct < 0 ? ' down' : '');
+        const medER = ws.median_er != null ? fmtPct(ws.median_er, 2) : (ws.median_er_str || '—');
+
+        // mini sparkline placeholder (7 flat points — real data needs backend)
+        const sparkVals = ws.daily_posts_7d || ws.spark_posts || null;
+        const sparkHtml = sparkVals ? kpiSparkline(sparkVals, 120, 32) : '';
+
+        const cards = [
+          {
+            label: '总发推',
+            value: fmt(ws.total_posts),
+            sub: '本周',
+            cls: '',
+            spark: sparkHtml
+          },
+          {
+            label: '总曝光',
+            value: fmt(ws.total_impressions || ws.total_views),
+            sub: '本周',
+            cls: ''
+          },
+          {
+            label: 'vs 上周',
+            value: vsStr,
+            sub: '曝光变化',
+            cls: vsClass
+          },
+          {
+            label: '领先类目',
+            value: ws.top_topic || '—',
+            sub: '互动率 ' + medER,
+            cls: ' accent'
+          }
+        ];
+
+        grid.innerHTML = cards.map(c => `
+          <div class="kpi-card">
+            <p class="kpi-label">${esc(c.label)}</p>
+            <p class="kpi-value${c.cls}">${esc(c.value)}</p>
+            <div class="kpi-sub">
+              <span>${esc(c.sub)}</span>
+            </div>
+            ${c.spark || ''}
+          </div>
+        `).join('');
+
+        // summary line
+        const summary = document.getElementById('kpi-summary');
+        if (ws.top_topic) {
+          summary.textContent = '领先类目 ' + ws.top_topic;
+        }
+      }
+
+      // ── Section B: bar chart ─────────────────────────────────────────
+      function renderBarChart(breakdown) {
+        const container = document.getElementById('bar-chart-container');
+        if (!breakdown || !breakdown.length) {
+          container.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:8px 0">暂无类目数据</p>';
+          return;
+        }
+        const sorted = [...breakdown].sort((a, b) => (b.posts || 0) - (a.posts || 0));
+        const maxPosts = Math.max(...sorted.map(d => d.posts || 0)) || 1;
+
+        const data = sorted.map(row => {
+          const ratio = parseVsPct(row.vs_baseline || row.vs_baseline_pct);
+          const color = ratio == null ? 'var(--muted)'
+                       : ratio > 0.2  ? 'var(--green)'
+                       : ratio < -0.2 ? 'var(--red)'
+                       : 'rgba(255,255,255,0.25)';
+          const arrow = row.trend === 'rising' ? '↑' : row.trend === 'falling' ? '↓' : '→';
+          const deltaStr = ratio != null
+            ? (ratio >= 0 ? '+' : '') + Math.round(ratio * 100) + '%'
+            : null;
+          return {
+            label: row.topic,
+            value: row.posts || 0,
+            posts: row.posts || 0,
+            color,
+            arrow,
+            delta_str: deltaStr
+          };
+        });
+
+        barChart(data, container);
+
+        // summary: top rising topic
+        const rising = sorted.filter(r => r.trend === 'rising');
+        const summaryEl = document.getElementById('bar-summary');
+        if (rising.length) {
+          summaryEl.textContent = rising[0].topic + ' 上升中';
+        }
+      }
+
+      // ── Section C: donut charts ──────────────────────────────────────
+      function buildDonut(wrapId, legendId, distObj, label) {
+        const wrap = document.getElementById(wrapId);
+        const legend = document.getElementById(legendId);
+
+        if (!distObj || !Object.keys(distObj).length) {
+          wrap.innerHTML = '<p style="color:var(--muted);font-size:12px;">暂无数据</p>';
+          legend.innerHTML = '';
+          return;
+        }
+        const entries = Object.entries(distObj).sort((a, b) => b[1] - a[1]);
+        const colors = palette(entries.length);
+        const donutData = entries.map(([t, v], i) => ({ label: t, value: v, color: colors[i] }));
+
+        const result = donut(donutData, 80);
+        if (!result) return;
+
+        // center text
+        wrap.innerHTML = '';
+        wrap.appendChild(result.svg);
+
+        const center = document.createElement('div');
+        center.className = 'donut-center-text';
+        center.innerHTML = `<span class="donut-center-n">${result.total}</span><span class="donut-center-sub">${esc(label)}</span>`;
+        wrap.appendChild(center);
+
+        // legend
+        legend.innerHTML = donutData.slice(0, 6).map(d => `
+          <div class="donut-legend-row">
+            <span class="donut-legend-dot" style="background:${esc(d.color)}"></span>
+            <span class="donut-legend-topic" title="${esc(d.label)}">${esc(d.label)}</span>
+            <span class="donut-legend-count">${d.value}</span>
+          </div>
+        `).join('');
+      }
+
+      function renderDonuts(vp) {
+        const topDist = {};
+        const botDist = {};
+
+        if (vp.top_posts && vp.top_posts.length) {
+          vp.top_posts.forEach(p => { topDist[p.topic] = (topDist[p.topic] || 0) + 1; });
+        } else if (vp.top_topic_distribution) {
+          Object.assign(topDist, vp.top_topic_distribution);
+        } else if (vp.top10_topics) {
+          vp.top10_topics.forEach(t => { topDist[t] = (topDist[t] || 0) + 1; });
+        }
+
+        if (vp.bottom_posts && vp.bottom_posts.length) {
+          vp.bottom_posts.forEach(p => { botDist[p.topic] = (botDist[p.topic] || 0) + 1; });
+        } else if (vp.bottom_quartile_topics) {
+          vp.bottom_quartile_topics.forEach(t => { botDist[t] = (botDist[t] || 0) + 1; });
+        }
+
+        buildDonut('donut-top-wrap', 'donut-top-legend', topDist, '高分帖');
+        buildDonut('donut-bot-wrap', 'donut-bot-legend', botDist, '低分帖');
+
+        // summary
+        const topKeys = Object.keys(topDist);
+        const botKeys = Object.keys(botDist);
+        const summaryEl = document.getElementById('donut-summary');
+        if (topKeys.length && botKeys.length) {
+          const overlap = topKeys.filter(k => botKeys.includes(k));
+          if (overlap.length === 0) {
+            summaryEl.textContent = '高低分布无重叠类目';
+          } else {
+            summaryEl.textContent = '共现类目 ' + overlap.slice(0, 2).join(' / ');
+          }
+        }
+      }
+
+      // ── Section D: scatter ────────────────────────────────────────────
+      async function renderScatter() {
+        const container = document.getElementById('scatter-container');
+        document.getElementById('scatter-meta').textContent = '加载中...';
+        try {
+          const res = await fetch('/api/tweets?limit=200&age_h=168');
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          const tweets = data.tweets || data.data || data || [];
+          if (!tweets.length) {
+            container.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:8px 0">暂无推文数据</p>';
+            return;
+          }
+
+          // compute ER median for coloring
+          const ers = tweets.map(t => {
+            const m = t.latest_metrics || t.metrics || {};
+            const views = m.views || m.impressions || 0;
+            if (!views) return null;
+            const eng = (m.likes || 0) + (m.retweets || 0) + (m.replies || 0) + (m.bookmarks || 0);
+            return eng / views;
+          }).filter(v => v != null).sort((a, b) => a - b);
+          const medER = ers[Math.floor(ers.length / 2)] || 0.01;
+          const top5Threshold = ers[Math.floor(ers.length * 0.95)] || 0.1;
+
+          const points = tweets.map(t => {
+            const m = t.latest_metrics || t.metrics || {};
+            const views = m.views || m.impressions || 0;
+            if (!views) return null;
+            const eng = (m.likes || 0) + (m.retweets || 0) + (m.replies || 0) + (m.bookmarks || 0);
+            const er = eng / views;
+            const replies = m.replies || 0;
+            const color = er >= top5Threshold ? 'var(--accent)'
+                         : er >= medER * 1.5   ? 'var(--amber)'
+                         : 'rgba(160,165,180,0.5)';
+            return { x: views, y: er, size: replies, color, label: t.topic || null };
+          }).filter(Boolean);
+
+          scatter(points, container);
+          document.getElementById('scatter-meta').textContent =
+            points.length + ' 条推文 · 近 7 天';
+        } catch (e) {
+          container.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:8px 0">散点图加载失败: ' + esc(e.message) + '</p>';
+          document.getElementById('scatter-meta').textContent = '';
+        }
+      }
+
+      // ── Section E: action cards ───────────────────────────────────────
+      function renderActionCard(bodyId, countId, items, type) {
+        const body = document.getElementById(bodyId);
+        const countEl = document.getElementById(countId);
+        if (!items || !items.length) {
+          body.innerHTML = `<div class="action-card-empty">本周无候选</div>`;
+          if (countEl) countEl.textContent = '0';
+          return;
+        }
+        if (countEl) countEl.textContent = items.length + ' 条';
+
+        const metricKey = type === 'reply' ? null : 'er';
+
+        body.innerHTML = items.slice(0, 5).map(item => {
+          const snippet = item.text_snippet || item.text_preview || item.text || '';
+          let metricHtml = '';
+          if (type === 'boost') {
+            const erStr = item.er != null ? fmtPct(item.er, 1) : null;
+            const velStr = item.delta_views_24h != null ? fmt(item.delta_views_24h) + '/h' : null;
+            if (erStr) metricHtml += `<span class="action-metric-pill">${esc(erStr)}</span>`;
+            if (velStr) metricHtml += `<span class="action-metric-pill">${esc(velStr)}</span>`;
+          } else if (type === 'kill') {
+            const erStr = item.er != null ? fmtPct(item.er, 1) : null;
+            if (erStr) metricHtml += `<span class="action-metric-pill">${esc(erStr)}</span>`;
+          } else if (type === 'reply') {
+            const repStr = item.total_replies != null ? item.total_replies + ' 回复' : null;
+            if (repStr) metricHtml += `<span class="action-metric-pill">${esc(repStr)}</span>`;
+          }
+
+          return `<div class="action-item-row">
+            <p class="action-item-text">${esc(snippet)}</p>
+            <div class="action-item-meta">
+              ${metricHtml}
+              ${item.topic ? `<span style="color:var(--muted)">${esc(item.topic)}</span>` : ''}
+              <a class="action-item-link" href="${esc(tweetUrl(item.tweet_id))}" target="_blank" rel="noopener">X 链接</a>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      // ── main ──────────────────────────────────────────────────────────
+      async function loadInsights() {
+        const loadingEl = document.getElementById('loading');
+        const contentEl = document.getElementById('content');
+        const errorEl   = document.getElementById('error-banner');
+
+        try {
+          const res = await fetch('/api/insights');
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || 'API returned ok=false');
+
+          const ws = data.weekly_summary || {};
+          const vp = data.viral_pattern  || {};
+          const ac = data.actions        || {};
+
+          renderKPI(ws);
+          renderBarChart(ws.topic_breakdown || []);
+          renderDonuts(vp);
+          renderActionCard('boost-body', 'boost-count', ac.boost_candidates, 'boost');
+          renderActionCard('kill-body',  'kill-count',  ac.kill_candidates,  'kill');
+          renderActionCard('reply-body', 'reply-count', ac.reply_candidates, 'reply');
+
+          loadingEl.style.display = 'none';
+          contentEl.style.display = 'flex';
+
+          // scatter loads separately (different API)
+          renderScatter();
+        } catch (err) {
+          loadingEl.style.display = 'none';
+          errorEl.style.display = 'block';
+          errorEl.textContent = '数据加载失败: ' + err.message;
+        }
+      }
+
+      loadInsights();
+    })();
+    </script>
+  </body>
+</html>

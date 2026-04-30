@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS launchd agent — runs the collector every 30 minutes.
+
+  Install:
+    cp com.xdatawarroom.collector.plist.example ~/Library/LaunchAgents/com.xdatawarroom.collector.plist
+    # Edit the paths below to match your setup, then:
+    launchctl load ~/Library/LaunchAgents/com.xdatawarroom.collector.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.xdatawarroom.collector.plist
+    rm ~/Library/LaunchAgents/com.xdatawarroom.collector.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.xdatawarroom.collector</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/path/to/x-data-warroom/scripts/collector-cron.sh</string>
+  </array>
+
+  <!-- Every 30 minutes -->
+  <key>StartInterval</key>
+  <integer>1800</integer>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>X_DATA_DIR</key>
+    <string>/Users/YOUR_USERNAME/.x-data</string>
+    <key>X_SCREEN_NAME</key>
+    <string>your_twitter_handle</string>
+    <key>PATH</key>
+    <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/YOUR_USERNAME/.x-data/collector.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/YOUR_USERNAME/.x-data/collector.err.log</string>
+
+  <key>ThrottleInterval</key>
+  <integer>60</integer>
+</dict>
+</plist>

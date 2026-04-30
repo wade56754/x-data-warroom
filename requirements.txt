@@ -1,0 +1,6 @@
+# Python dependencies for x-data-warroom
+# Install with: uv pip install -r requirements.txt
+# Or:           pip install -r requirements.txt
+
+# PostgreSQL client (psycopg3)
+psycopg[binary]>=3.2
