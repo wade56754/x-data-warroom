@@ -1,0 +1,35 @@
+# Caddyfile.example · X Data Warroom reverse proxy
+#
+# Replace warroom.example.com with your domain.
+# Replace <bcrypt-hash> with output of: caddy hash-password
+#
+# Install: cp Caddyfile.example /etc/caddy/Caddyfile
+# Reload:  systemctl reload caddy
+
+warroom.example.com {
+    # auto Let's Encrypt SSL
+    encode gzip
+
+    # HTTP basic auth (single-user)
+    basicauth /* {
+        wade <bcrypt-hash>
+    }
+
+    # reverse proxy to Metabase
+    reverse_proxy localhost:3000
+
+    # security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    # logs
+    log {
+        output file /var/log/caddy/warroom.log
+        format console
+    }
+}
