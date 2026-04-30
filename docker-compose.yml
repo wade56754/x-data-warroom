@@ -1,0 +1,33 @@
+# docker-compose.yml · X Data Warroom — Metabase BI layer
+# Pin to 0.55.5 LTS to avoid 0.56.x OOM regression (GitHub#65668).
+# Pre-built dashboard views in Supabase serve as Metabase contracts.
+
+services:
+  metabase:
+    image: metabase/metabase:v0.55.5
+    container_name: warroom-metabase
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Memory / runtime
+      JAVA_OPTS: "-Xmx1500m -Xms512m"
+      MB_JAVA_TIMEZONE: Asia/Shanghai
+
+      # Query safety
+      MB_DOWNLOAD_ROW_LIMIT: "10000"
+      MB_QUERY_DEFAULT_TIMEOUT: "30"
+
+      # Persistence (H2 in volume; sufficient for single-instance dev)
+      MB_DB_FILE: "/metabase-data/metabase.db"
+
+    volumes:
+      - ./metabase-data:/metabase-data
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+# Caddy / Tailscale / VPS deployment will be appended in a separate
+# compose override file (docker-compose.prod.yml) when production
+# phase begins.
